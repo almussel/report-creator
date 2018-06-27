@@ -261,8 +261,8 @@ DB.prototype.getReportContents = function() {
   for (var i = 0; i < names.length; i++) {
     var name = names[i]
     attrs['chunkName'] = name
-    key = JSON.stringify(attrs)
-    contents = this._chunkContents[key]
+    var key = JSON.stringify(attrs)
+    var contents = this._chunkContents[key]
     if (contents) {
       results.push('<p>')
       results.push(contents)
@@ -273,7 +273,7 @@ DB.prototype.getReportContents = function() {
 }
 
 DB.prototype._process = function(s) {
-  s = s.replace(/_([^_]+)_/g, '<em>$1</em>')
+  var s = s.replace(/_([^_]+)_/g, '<em>$1</em>')
   s = s.replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
   s = s.replace(/\[\[([^\[\]]+)\]\]/g, '<sup>$1</sup>')
   return s
