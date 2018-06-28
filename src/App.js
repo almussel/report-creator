@@ -13,20 +13,22 @@ db.setCurrentChunkContents('some default contents')
 class App extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      reportType: 'Default Report',
+    }
   }
 
   render() {
     return (
       <div>
         <h1> Report Creator! </h1>
-        <h2> Report Type: {db.getCurrentReportType()} </h2>
+        <h2> Report Type: {this.state.reportType} </h2>
         <select onChange={this.handleChange}>
           {db.getAllReportTypes().map((value) =>
             <option key={value} value={value}> {value} </option>
           )}
         </select>
-        <AttributeSelector attributes={db.getAllAttributeNames()}/>
-        <ChunkEditor chunks={db.getAllChunkNames()} attributes={db.getCurrentAttributes()}/>
+        <AttributeSelector reportType={this.state.reportType}/>
         <button> View whole report </button>
       </div>
     );
@@ -37,42 +39,47 @@ class App extends Component {
 class AttributeSelector extends Component {
   constructor(props) {
     super(props);
+    this.state = {}
+    db.getAllAttributeNames().map((attribute) => this.state[attribute] = null)
     this.handleChange = this.handleChange.bind(this)
     this.clearAttributes = this.clearAttributes.bind(this)
   }
 
   handleChange(event, attribute) {
-    db.setCurrentAttribute(attribute, event.target.value || null)
-    console.log(db.getCurrentAttributes())
+    var newState = {}
+    newState[attribute] = event.target.value || null
+    this.setState(newState)
   }
   
   clearAttributes() {
-    db.getAllAttributeNames().map((attribute) =>
-      db.setCurrentAttribute(attribute, null)
-    )
-    console.log(db.getCurrentAttributes())
+      var newState = {}
+    for (var attribute in this.state) {
+      newState[attribute] = null
+    }
+    this.setState(newState)
   }
 
   render() {
+    console.log('rendering')
+    console.log(this.state)
     return (
       <div>
         <h2> Attributes </h2>
-        {this.props.attributes.map((attribute) =>
+        {Object.keys(this.state).map((attribute) =>
           <div key={attribute}>
             <label> {attribute} </label>
             <select onChange={(e) => this.handleChange(e, attribute)}>
               {db.getAllAttributeValues(attribute).map((value) =>
-                <option key={value} value={value}> {value} </option>
+                <option key={value} value={value} selected={value === this.state[attribute]}> {value} </option>
               )}
             </select>
           </div>
         )}
         <button onClick={this.clearAttributes}> Clear </button>
+        <ChunkEditor reportType={this.props.reportType} attributes={this.state}/>
       </div>
     )
   }
-
-
 }
 
 
@@ -80,7 +87,8 @@ class ChunkEditor extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        selectedOption: db.getCurrentChunkName(),
+        currentChunk: 'Starting Chunk',
+        chunks: db.getAllChunkNames(this.reportType),
         newChunk: ''
     };
     this.handleChange = this.handleChange.bind(this);
@@ -89,9 +97,8 @@ class ChunkEditor extends Component {
   }
 
   handleChange(event) {
-    db.setCurrentChunkName(event.target.value)
     this.setState({
-      selectedOption: event.target.value
+      currentChunk: event.target.value
     })
   }
 
@@ -101,9 +108,8 @@ class ChunkEditor extends Component {
 
   handleSubmit(event) {
     db.addChunkName(this.state.newChunk)
-    db.setCurrentChunkName(this.state.newChunk)
     this.setState({
-      selectedOption: this.state.newChunk,
+      currentChunk: this.state.newChunk,
       newChunk: ''
     })
     event.preventDefault()
@@ -113,10 +119,10 @@ class ChunkEditor extends Component {
     return (
       <div>
         <h2> Sections </h2>
-        {this.props.chunks.map((chunk) =>
+        {this.state.chunks.map((chunk) =>
           <div key={chunk}>
             <label>
-            <input type="radio" value={chunk} checked={this.state.selectedOption === chunk} onChange={this.handleChange} /> {chunk}
+            <input type="radio" value={chunk} checked={this.state.currentChunk === chunk} onChange={this.handleChange} /> {chunk}
             </label>
             <br />
           </div>
@@ -125,7 +131,7 @@ class ChunkEditor extends Component {
         <form onSubmit={this.handleSubmit}>
           <input type="text" placeholder="Add a new section" value={this.state.newChunk} onChange={this.handleNewChunkChange} />
         </form>
-        <ReportChunkTextField chunk={this.selectedOption} />
+        <ReportChunkTextField reportType={this.props.reportType} chunkName={this.state.currentChunk} attributes={this.props.attributes}/>
       </div>
     )
   }
@@ -135,28 +141,17 @@ class ChunkEditor extends Component {
 class ReportChunkTextField extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      content: db.getCurrentChunkContents(),
-      savedContent: db.getCurrentChunkContents()
-    }
+    this.state = db.getChunk(this.props.reportType, this.props.chunkName, this.props.attributes)
     this.handleChange = this.handleChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
   handleChange(event) {
-    this.setState({content: event.target.value})
-  }
-
-  refreshContent() {
-    this.setState({
-      content: db.getCurrentChunkContents(),
-      savedContent: db.getCurrentChunkContents()
-    })
+    this.setState({contents: event.target.value})
   }
 
   handleSubmit(event) {
-    db.setCurrentChunkContents(this.state.content)
-    this.refreshContent()
+    db.setChunkContents(this.props.reportType, this.props.chunk, this.state.contents)
     event.preventDefault()
   }
 
@@ -164,11 +159,11 @@ class ReportChunkTextField extends Component {
     return (
         <form onSubmit={this.handleSubmit}>
         <div>
-          <h3> {db.getCurrentChunkName()} </h3>
-          <p> {db.getCurrentChunkContents()} </p>
+          <h3> {this.props.chunkName} </h3>
+          <p> {this.state.contents} </p>
         </div>
         <label>
-          <textarea value={this.state.content} onChange={this.handleChange} />
+          <textarea value={this.state.contents} onChange={this.handleChange} />
         <br />
         </label>
         <input type="submit" value="Save" />
