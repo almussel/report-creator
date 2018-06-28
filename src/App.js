@@ -4,11 +4,8 @@ import './App.css';
 
 var db = new DB()
 db.addReportType('Default Report')
-db.setCurrentReportType('Default Report')
-db.addChunkName('Starting Chunk')
-db.addChunkName('Other Chunk')
-db.setCurrentChunkName('Starting Chunk')
-db.setCurrentChunkContents('some default contents')
+db.addChunkName('Default Report', 'General')
+db.addChunkName('Default Report', 'Gene Specific')
 
 class App extends Component {
   constructor(props) {
@@ -29,7 +26,6 @@ class App extends Component {
           )}
         </select>
         <AttributeSelector reportType={this.state.reportType}/>
-        <button> View whole report </button>
       </div>
     );
   }
@@ -60,22 +56,21 @@ class AttributeSelector extends Component {
   }
 
   render() {
-    console.log('rendering')
-    console.log(this.state)
     return (
       <div>
         <h2> Attributes </h2>
         {Object.keys(this.state).map((attribute) =>
           <div key={attribute}>
             <label> {attribute} </label>
-            <select onChange={(e) => this.handleChange(e, attribute)}>
+            <select value={this.state[attribute]} onChange={(e) => this.handleChange(e, attribute)}>
               {db.getAllAttributeValues(attribute).map((value) =>
-                <option key={value} value={value} selected={value === this.state[attribute]}> {value} </option>
+                <option key={value} value={value}> {value} </option>
               )}
             </select>
           </div>
         )}
         <button onClick={this.clearAttributes}> Clear </button>
+        <ReportViewer reportType={this.props.reportType} attributes={this.state} />
         <ChunkEditor reportType={this.props.reportType} attributes={this.state}/>
       </div>
     )
@@ -86,9 +81,10 @@ class AttributeSelector extends Component {
 class ChunkEditor extends Component {
   constructor(props) {
     super(props);
+    var chunks = db.getAllChunkNames(this.props.reportType)
     this.state = {
-        currentChunk: 'Starting Chunk',
-        chunks: db.getAllChunkNames(this.reportType),
+        currentChunk: chunks[0],
+        chunks: chunks,
         newChunk: ''
     };
     this.handleChange = this.handleChange.bind(this);
@@ -107,7 +103,7 @@ class ChunkEditor extends Component {
   }
 
   handleSubmit(event) {
-    db.addChunkName(this.state.newChunk)
+    db.addChunkName(this.props.reportType, this.state.newChunk)
     this.setState({
       currentChunk: this.state.newChunk,
       newChunk: ''
@@ -144,6 +140,14 @@ class ReportChunkTextField extends Component {
     this.state = db.getChunk(this.props.reportType, this.props.chunkName, this.props.attributes)
     this.handleChange = this.handleChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.override = this.override.bind(this)
+    this.attributesExist = this.attributesExist.bind(this)
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (newProps !== this.props) {
+      this.setState(db.getChunk(newProps.reportType, newProps.chunkName, newProps.attributes));
+    }
   }
 
   handleChange(event) {
@@ -151,27 +155,102 @@ class ReportChunkTextField extends Component {
   }
 
   handleSubmit(event) {
-    db.setChunkContents(this.props.reportType, this.props.chunk, this.state.contents)
+    db.setChunkContents(this.props.reportType, this.props.chunkName, this.props.attributes, this.state.contents)
     event.preventDefault()
+  }
+
+  override(event) {
+    this.setState({inherited: !event.target.checked})
+  }
+
+  attributesExist() {
+    for (var key in this.props.attributes) {
+      if (this.props.attributes[key]) {
+        return true
+      }
+    }
+    return false
   }
 
   render() {
     return (
-        <form onSubmit={this.handleSubmit}>
+      <form onSubmit={this.handleSubmit}>
         <div>
           <h3> {this.props.chunkName} </h3>
-          <p> {this.state.contents} </p>
         </div>
         <label>
-          <textarea value={this.state.contents} onChange={this.handleChange} />
+          {(this.attributesExist()) ? (
+            <div>
+              <input type="checkbox" checked={!this.state.inherited} onChange={this.override}/> Override default section
+              <br />
+              <br />
+            </div>
+          ) : (
+            <div />
+          )}
+          {(this.state.inherited && this.attributesExist()) ? (
+            <p> {this.state.contents} </p>
+          ) : (
+            <textarea value={this.state.contents || ''} onChange={this.handleChange} />
+          )}
         <br />
         </label>
         <input type="submit" value="Save" />
       </form>
-    );
+    )
   }
 }
 
+
+class ReportViewer extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      reportHTML: db.getReportContents(this.props.reportType, this.props.attributes),
+      view: false
+    }
+
+    this.renderReport = this.renderReport.bind(this)
+    this.allAttributesSet = this.allAttributesSet.bind(this)
+  }
+
+  allAttributesSet() {
+    for (var key in this.props.attributes) {
+      if (!this.props.attributes[key]) {
+        return false
+      }
+    }
+    return true
+  }
+
+  renderReport() {
+    if (this.allAttributesSet()) {
+      this.setState({
+        reportHTML: db.getReportContents(this.props.reportType, this.props.attributes),
+        view: true
+      })
+    } else {
+      this.setState({
+        reportHTML: "<p>Please set all attributes to view a report</p>",
+        view: true
+      })
+    }
+  }
+
+  render() {
+      return (
+      <div>
+        <button onClick={this.renderReport}> View whole report </button>
+        <br />
+        {this.state.view ? (
+          <div dangerouslySetInnerHTML={{__html: this.state.reportHTML}} />
+        ) : (
+          <div />
+        )}
+      </div>
+    )
+  }
+}
 
 
 export default App;
