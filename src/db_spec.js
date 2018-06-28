@@ -6,6 +6,8 @@ JS.Test.describe('DB', function() { with(this) {
     this.db = new DB()
   }})
 
+// REPORT TYPES
+
   describe('addReportType', function() { with(this) {
     it('adds report types', function() { with(this) {
       db.addReportType('mammals')
@@ -21,94 +23,35 @@ JS.Test.describe('DB', function() { with(this) {
     }})
   }})
 
-  describe('getCurrentReportType', function() { with(this) {
-    it('returns correct value', function() { with(this) {
-      this.db.addReportType('animals')
-      this.db.setCurrentReportType('animals')
-      assertEqual('animals', this.db.getCurrentReportType())
-    }})
-
-    it('throws when none', function() { with(this) {
-      assertThrows(Error, function() {
-        this.db.getCurrentReportType()
-      })
-    }})
-  }})
-
-  describe('setCurrentReportType', function() { with(this) {
-    it('clears other fields', function() { with(this) {
-      this.db.addReportType('mammals')
-      this.db.addReportType('birds')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('cat')
-      this.db.setCurrentChunkName('cat')
-      this.db.setCurrentAttribute('gene', 'LION')
-      this.db.setCurrentReportType('birds')
-      assertThrows(Error, function() {
-        this.db.getCurrentChunkName()
-      })
-      assertEqual(null, this.db.getCurrentAttributes()['gene'])
-    }})
-
+  describe('_validateReportType', function() { with(this) {
     it('throws when name is bad', function() { with(this) {
       this.db.addReportType('mammals')
       assertThrows(Error, function() {
-        this.db.setCurrentReportType('birds')
+        this.db._validateReportType('birds')
       })
     }})
   }})
+
+// CHUNKS
 
   describe('addChunkName', function() { with(this) {
     it('adds the name', function() { with(this) {
       this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.addChunkName('EYE_COLOR')
-      assertEqual(['FUR_TYPE', 'EYE_COLOR'], this.db.getAllChunkNames())
-    }})
-  }})
-
-  describe('getCurrentChunkName', function() { with(this) {
-    it('gets the name', function() { with(this) {
-      this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.setCurrentChunkName('FUR_TYPE')
-      assertEqual('FUR_TYPE', this.db.getCurrentChunkName())
-    }})
-
-    it('throws when there is no name', function() { with(this) {
-      this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      assertThrows(Error, function() {
-        this.db.getCurrentChunkName()
-      })
-    }})
-  }})
-
-  describe('setCurrentChunkName', function() { with(this) {
-    it('throws when name is unknown', function() { with(this) {
-      this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      assertThrows(Error, function() {
-        this.db.setCurrentChunkName('FUR_TYPE')
-      })
+      this.db.addChunkName('mammals', 'FUR_TYPE')
+      this.db.addChunkName('mammals', 'EYE_COLOR')
+      assertEqual(['FUR_TYPE', 'EYE_COLOR'], this.db.getAllChunkNames('mammals'))
     }})
   }})
 
   describe('getAllChunkNames', function() { with(this) {
     it('changes when report type changes', function() { with(this) {
       this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.addChunkName('EYE_COLOR')
       this.db.addReportType('birds')
-      this.db.setCurrentReportType('birds')
-      this.db.addChunkName('FEATHERS')
-      assertEqual(['FEATHERS'], this.db.getAllChunkNames())
-      this.db.setCurrentReportType('mammals')
-      assertEqual(['FUR_TYPE', 'EYE_COLOR'], this.db.getAllChunkNames())
+      this.db.addChunkName('mammals', 'FUR_TYPE')
+      this.db.addChunkName('mammals', 'EYE_COLOR')
+      this.db.addChunkName('birds', 'FEATHERS')
+      assertEqual(['FEATHERS'], this.db.getAllChunkNames('birds'))
+      assertEqual(['FUR_TYPE', 'EYE_COLOR'], this.db.getAllChunkNames('mammals'))
     }})
   }})
 
@@ -130,101 +73,82 @@ JS.Test.describe('DB', function() { with(this) {
     }})
   }})
 
-  describe('getCurrentAttributes', function() { with(this) {
-    it('returns nulls when not set', function() { with(this) {
-      attrs = this.db.getCurrentAttributes()
+  describe('_normalizeAttributes', function() { with(this) {
+    it('fills in missing fields', function() { with(this) {
+      attrs = {'sex': 'M'}
+      attrs = this.db._normalizeAttributes(attrs)
       assertEqual(null, attrs['gene'])
-      assertEqual(null, attrs['mutation'])
-      assertEqual(null, attrs['sex'])
-    }})
-
-    it('returns values when set', function() { with(this) {
-      this.db.setCurrentAttribute('sex', 'M')
-      this.db.setCurrentAttribute('mutation', 'ALBINO')
-      var attrs = this.db.getCurrentAttributes()
-      assertEqual(null, attrs['gene'])
-      assertEqual('ALBINO', attrs['mutation'])
       assertEqual('M', attrs['sex'])
+      assertEqual(null, attrs['mutation'])
     }})
-  }})
 
-  describe('_getCurrentKey', function() { with(this) {
-    it('returns a correct string', function() { with(this) {
-      this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.setCurrentChunkName('FUR_TYPE')
-      assertEqual('{"gene":null,"mutation":null,"sex":null,"reportType":"mammals","chunkName":"FUR_TYPE"}',
-        this.db._getCurrentKey())
+    it('throws with bad values', function() { with(this) {
+      attrs = {'sex': 'Z'}
+      assertThrows(Error, function() {
+        this.db._normalizeAttributes(attrs)
+      })
     }})
   }})
 
   describe('get/setChunkContents', function() { with(this) {
     it('gets back what it sets', function() { with(this) {
       this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.setCurrentChunkName('FUR_TYPE')
-      this.db.setCurrentAttribute('sex', 'F')
+      this.db.addChunkName('mammals', 'FUR_TYPE')
+      var attrs = {'sex': 'F'}
       var str = 'The Cat in the Hat'
-      this.db.setCurrentChunkContents(str)
-      assertEqual(str, this.db.getCurrentChunkContents())
+      this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str)
+      assertEqual(str, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
     }})
 
     it('keeps track of attributes', function() { with(this) {
       this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.setCurrentChunkName('FUR_TYPE')
+      this.db.addChunkName('mammals', 'FUR_TYPE')
+      var attrs = {'sex': 'F'}
 
-      this.db.setCurrentAttribute('sex', 'F')
       var str1 = 'The Cat in the Hat'
-      this.db.setCurrentChunkContents(str1)
+      this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str1)
 
-      this.db.setCurrentAttribute('sex', 'M')
+      attrs['sex'] = 'M'
       var str2 = 'Green Eggs and Ham'
-      this.db.setCurrentChunkContents(str2)
+      this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str2)
 
-      this.db.setCurrentAttribute('sex', null)
+      attrs['sex'] = null
       var str3 = 'Hop on Pop'
-      this.db.setCurrentChunkContents(str3)
+      this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str3)
 
-      this.db.setCurrentAttribute('sex', 'M')
-      assertEqual(str2, this.db.getCurrentChunkContents())
-      this.db.setCurrentAttribute('sex', null)
-      assertEqual(str3, this.db.getCurrentChunkContents())
-      this.db.setCurrentAttribute('sex', 'F')
-      assertEqual(str1, this.db.getCurrentChunkContents())
-      this.db.setCurrentAttribute('gene', 'TIGR')
-      assertEqual(null, this.db.getCurrentChunkContents())
+      attrs['sex'] = 'M'
+      assertEqual(str2, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
+      attrs['sex'] = null
+      assertEqual(str3, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
+      attrs['sex'] = 'F'
+      assertEqual(str1, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
+      attrs['gene'] = 'TIGR'
+      assertEqual(null, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
     }})
   }})
 
   describe('getReportContents', function() { with(this) {
     it('processes the text', function() { with(this) {
+      var attrs = {}
       this.db.addReportType('mammals')
-      this.db.setCurrentReportType('mammals')
-      this.db.addChunkName('FUR_TYPE')
-      this.db.setCurrentChunkName('FUR_TYPE')
-      this.db.setCurrentChunkContents('Soft and _fuzzy_, with *a double coat*.')
-      this.db.addChunkName('EYE_COLOR')
-      this.db.setCurrentChunkName('EYE_COLOR')
-      this.db.setCurrentChunkContents('Green with slit pupil[[Miller94]] and reflective retina.')
-      str = this.db.getReportContents()
+      this.db.addChunkName('mammals', 'FUR_TYPE')
+      this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, 'Soft and _fuzzy_, with *a double coat*.')
+      this.db.addChunkName('mammals', 'EYE_COLOR')
+      this.db.setChunkContents('mammals', 'EYE_COLOR', attrs, 'Green with slit pupil[[Miller94]] and reflective retina.')
+      str = this.db.getReportContents('mammals', attrs)
       assertEqual(
         '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil<sup>Miller94</sup> and reflective retina.</p>', str)
     }})
 
     it('substitutes attribute values', function() { with(this) {
-      this.db.setCurrentAttribute('gene', 'BEAR')
-      this.db.setCurrentAttribute('sex', 'M')
-      var str = this.db._process('A <<man/woman>> with a mutation in the _<<gene>>_ gene.')
+      attrs = {'gene': 'BEAR', 'sex': 'M'}
+      var str = this.db._process('A <<man/woman>> with a mutation in the _<<gene>>_ gene.', attrs)
       assertEqual('A man with a mutation in the <em>BEAR</em> gene.', str)
     }})
 
     it('throws for unknown substitution values', function() { with(this) {
       assertThrows(Error, function() {
-        this.db._process('A <<gremlin>> shrieked')
+        this.db._process('A <<gremlin>> shrieked', {})
       })
     }})
   }})

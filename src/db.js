@@ -4,26 +4,20 @@ Here is basic API to the "DB" object:
 
 - Attributes: 
         getAllAttributeNames() -> [string, ...]
-        getAllAttributeValues(name) -> [value, ...]
-        setCurrentAttribute(name, value)
-        getCurrentAttributes() -> { name: value, ...}
+        getAllAttributeValues(attributeName) -> [value, ...]
 
 - Report Types:
-        addReportType(name)
+        addReportType(reportName)
         getAllReportTypes() -> [string, ...]
-        setCurrentReportType(name)
-        getCurrentReportType() -> string
 
 - Chunk Names:
-        addChunkName(name)
-        getAllChunkNames() -> [string, ...]
-        setCurrentChunkName(name)
-        getCurrentChunkName() -> string
+        addChunkName(reportType, chunkName)
+        getAllChunkNames(reportType) -> [string, ...]
 
 - Contents: 
-        getCurrentChunkContents() -> string
-        setCurrentChunkContents(string)
-        getReportContents() -> [HTML-formatted-string]
+	getChunk(reportType, chunkName, attributes) -> {"inherited": boolean, "contents": string}
+	setChunkContents(reportType, chunkName, attributes, string)
+	getReportContents(reportType, attributes) -> [HTML-formatted-string]
 
 */
 
@@ -113,10 +107,7 @@ var citations = [
 
 function DB() {
   this._reportTypes = []  // [ <reportType>, ... ]
-  this._currentReportType = null
   this._chunkNames = {}  // { reportType: [<chunkName>, ...], ... }
-  this._currentChunkName = null
-  this._currentAttributes = {}
   this._chunkContents = {}  // {'key': <key-string>, 'value': <value>, ... }
   this._citations = {}
   for (var i = 0; i < citations.length; i++) {
@@ -125,151 +116,137 @@ function DB() {
   }
 }
 
-DB.prototype.getAllAttributeNames = function () {
-  return ['gene', 'mutation', 'sex']
+// ATTRIBUTES
+
+var attributeValues = {
+  'gene': [null, 'LION', 'TIGR', 'BEAR'],
+  'mutation': [null, 'DWARF', 'ALBINO'],
+  'sex': [null, 'M', 'F']
 }
 
-DB.prototype._isValidAttributeName = function(name) {
+DB.prototype.getAllAttributeNames = function () {
+  return Object.keys(attributeValues)
+}
+
+DB.prototype._validateAttributeName = function(attributeName) {
   var names = this.getAllAttributeNames()
   for (var i = 0; i < names.length; i++ ) {
-    if (names[i] == name) { return true }
+    if (attributeName == names[i]) { return }
   }
-  return false
+  throw new Error('There is no attribute named ' + attributeName)
 }
 
-DB.prototype.getAllAttributeValues = function(name) {
-  if (! this._isValidAttributeName(name)) {
-    throw new Error('There is no attribute named ' + name)
-  }
-  return {
-    'gene': [null, 'LION', 'TIGR', 'BEAR'],
-    'sex': [null, 'M', 'F'],
-    'mutation': [null, 'DWARF', 'ALBINO']
-  } [name]
+DB.prototype.getAllAttributeValues = function(attributeName) {
+  this._validateAttributeName(attributeName)
+  return attributeValues[attributeName]
 }
 
-DB.prototype._isValidAttributeValue = function(name, value) {
-  var values = this.getAllAttributeValues(name)
+DB.prototype._validateAttributeValue = function(attributeName, attributeValue) {
+  var values = this.getAllAttributeValues(attributeName)
   for (var i = 0; i < values.length; i++) {
-    if (values[i] == value) { return true }
+    if (attributeValue == values[i]) { return }
   }
-  return false
+  throw new Error(attributeValue + ' is not a valid value for attribute ' + attributeName)
 }
 
-DB.prototype.setCurrentAttribute = function(name, value) {
-  if (! this._isValidAttributeValue(name, value)) {
-    throw new Error(value + ' is not a valid value for attribute ' + name)
-  }
-  this._currentAttributes[name] = value
-}
-
-DB.prototype.getCurrentAttributes = function() {
+DB.prototype._normalizeAttributes = function(attrs) {
   var result = {}
   var names = this.getAllAttributeNames()
   for (var i = 0; i < names.length; i++) {
-    var name = names[i]
-    result[name] = this._currentAttributes[name] || null
+    var attributeName = names[i]
+    var attributeValue = attrs[attributeName]
+    this._validateAttributeValue(attributeName, attributeValue)
+    result[attributeName] = attributeValue || null
   }
   return result
 }
 
-DB.prototype.addReportType = function(name) {
+// REPORT TYPES
+
+DB.prototype.addReportType = function(reportType) {
   for (var i = 0; i < this._reportTypes.length; i++) {
-    if (this._reportTypes[i] == name) {
-      throw new Error('There is already a report named ' + name)
+    if (this._reportTypes[i] == reportType) {
+      throw new Error('There is already a report named ' + reportType)
     }
   }
-  this._reportTypes.push(name)
-  this._chunkNames[name] = []
+  this._reportTypes.push(reportType)
+  this._chunkNames[reportType] = []
 }
 
 DB.prototype.getAllReportTypes = function() {
   return this._reportTypes
 }
 
-DB.prototype.setCurrentReportType = function(name) {
+DB.prototype._validateReportType = function(reportType) {
   for (var i = 0; i < this._reportTypes.length; i++) {
-    if (this._reportTypes[i] == name) {
-      this._currentReportType = name
-      this._currentChunkName = null
-      this._currentAttributes = {}
+    if (reportType == this._reportTypes[i]) { return }
+  }
+  throw new Error('There is no report type named ' + reportType)
+}
+
+// CHUNKS
+
+DB.prototype.addChunkName = function(reportType, chunkName) {
+  this._validateReportType(reportType)
+  var chunkNames = this._chunkNames[reportType]
+  for (var i = 0; i < chunkNames.length; i++) {
+    if (chunkName == chunkNames[i]) {
+      throw new Error(reportType + 'already has a chunk named ' + chunkName)
+    }
+  }
+  chunkNames.push(chunkName)
+}
+
+DB.prototype.getAllChunkNames = function(reportType) {
+  this._validateReportType(reportType)
+  return this._chunkNames[reportType]
+}
+
+DB.prototype._validateChunkName = function(reportType, chunkName) {
+  this._validateReportType(reportType)
+  var chunkNames = this.getAllChunkNames(reportType)
+  for (var i = 0; i < chunkNames.length; i++) {
+    if (chunkNames[i] == chunkName) {
       return
     }
   }
-  throw new Error('There is no report type named ' + name)
+  throw new Error(reportType + ' has no chunk named ' + chunkName)
 }
 
-DB.prototype.getCurrentReportType = function() {
-  if (! this._currentReportType) {
-    throw new Error('There is no current report type')
-  }
-  return this._currentReportType
-}
-
-DB.prototype.addChunkName = function(name) {
-  var chunkNames = this._chunkNames[this._currentReportType]
-  for (var i = 0; i < chunkNames.length; i++) {
-    if (chunkNames[i] == name) {
-      throw new Error(this._currentReportType + 'already has a chunk named ' + name)
-    }
-  }
-  chunkNames.push(name)
-}
-
-DB.prototype.getAllChunkNames = function() {
-  return this._chunkNames[this._currentReportType]
-}
-
-DB.prototype.setCurrentChunkName = function(name) {
-  var chunkNames = this.getAllChunkNames()
-  for (var i = 0; i < chunkNames.length; i++) {
-    if (chunkNames[i] == name) {
-      this._currentChunkName = name
-      return
-    }
-  }
-  throw new Error(this._currentReportType + ' has no chunk named ' + name)
-}
-
-DB.prototype.getCurrentChunkName = function() {
-  if (! this._currentChunkName) {
-    throw new Error('There is no current chunk name')
-  }
-  return this._currentChunkName
-}
-
-DB.prototype._getCurrentKey = function () {
-  var result = this.getCurrentAttributes()
-  result['reportType'] = this.getCurrentReportType()
-  result['chunkName'] = this.getCurrentChunkName()
+DB.prototype._makeKey = function (reportType, chunkName, attrs) {
+  var result = this._normalizeAttributes(attrs)
+  result['reportType'] = reportType
+  result['chunkName'] = chunkName
   return JSON.stringify(result)
 }
 
-DB.prototype.setCurrentChunkContents = function(contents) {
-  this._chunkContents[this._getCurrentKey()] = contents
+DB.prototype.setChunkContents = function(reportType, chunkName, attrs, contents) {
+  this._validateChunkName(reportType, chunkName)
+  var key = this._makeKey(reportType, chunkName, attrs)
+  this._chunkContents[key] = contents
 }
 
-DB.prototype.getCurrentChunkContents = function() {
-  return this._chunkContents[this._getCurrentKey()] || null
+DB.prototype.getChunk = function(reportType, chunkName, attrs) {
+  this._validateChunkName(reportType, chunkName)
+  var key = this._makeKey(reportType, chunkName, attrs)
+  return { "inherited": false, "contents": this._chunkContents[key] || null }
 }
 
-DB.prototype.getReportContents = function() {
-  var attrs = this.getCurrentAttributes()
-  attrs['reportType'] = this.getCurrentReportType()
+// REPORTS
+
+DB.prototype.getReportContents = function(reportType, attrs) {
   var results = []
-  var names = this.getAllChunkNames()
+  var names = this.getAllChunkNames(reportType)
   for (var i = 0; i < names.length; i++) {
-    var name = names[i]
-    attrs['chunkName'] = name
-    var key = JSON.stringify(attrs)
-    var contents = this._chunkContents[key]
+    var chunkName = names[i]
+    var contents = this.getChunk(reportType, chunkName, attrs)['contents']
     if (contents) {
       results.push('<p>')
       results.push(contents)
       results.push('</p>\n\n')
     }
   }
-  return this._process(results.join('')).trim()
+  return this._process(results.join(''), attrs).trim()
 }
 
 function substituter(attribs, name) {
@@ -289,20 +266,19 @@ function substituter(attribs, name) {
   throw new Error('unknown attribute ' + name)
 }
 
-DB.prototype._process = function(s) {
+DB.prototype._process = function(s, attribs) {
   var s = s.replace(/_([^_]+)_/g, '<em>$1</em>')
   s = s.replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
   s = s.replace(/\[\[([^\[\]]+)\]\]/g, '<sup>$1</sup>')
-  var attribs = this.getCurrentAttributes()
   s = s.replace(/<<([^<>]+)>>/g, function(match, name) {return substituter(attribs, name)})
   return s
 }
 
-DB.prototype.getCitation = function(name) {
-  if (! name in this._citations) {
-    throw new Error('there is no citation named ' + name)
+DB.prototype.getCitation = function(fixedKey) {
+  if (! fixedKey in this._citations) {
+    throw new Error('there is no citation named ' + fixedKey)
   }
-  return this._citations[name]
+  return this._citations[fixedKey]
 }
 
 module.exports = {DB: DB}
