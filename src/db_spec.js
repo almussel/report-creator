@@ -214,6 +214,19 @@ JS.Test.describe('DB', function() { with(this) {
       assertEqual(
         '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil<sup>Miller94</sup> and reflective retina.</p>', str)
     }})
+
+    it('substitutes attribute values', function() { with(this) {
+      this.db.setCurrentAttribute('gene', 'BEAR')
+      this.db.setCurrentAttribute('sex', 'M')
+      var str = this.db._process('A <<man/woman>> with a mutation in the _<<gene>>_ gene.')
+      assertEqual('A man with a mutation in the <em>BEAR</em> gene.', str)
+    }})
+
+    it('throws for unknown substitution values', function() { with(this) {
+      assertThrows(Error, function() {
+        this.db._process('A <<gremlin>> shrieked')
+      })
+    }})
   }})
 
   describe('getCitation', function() { with(this) {

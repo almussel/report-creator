@@ -272,10 +272,29 @@ DB.prototype.getReportContents = function() {
   return this._process(results.join('')).trim()
 }
 
+function substituter(attribs, name) {
+  if (name in attribs) {
+    return attribs[name]
+  }
+  var sex_dependents = {
+    'man/woman': {'M': 'man', 'F': 'woman'},
+    'men/women': {'M': 'men', 'F': 'women'},
+    'his/her': {'M': 'his', 'F': 'her'},
+    'him/her': {'M': 'him', 'F': 'her'},
+    'he/she': {'M': 'he', 'F': 'she'}
+  }
+  if (name in sex_dependents) {
+    return sex_dependents[name][attribs['sex']]
+  }
+  throw new Error('unknown attribute ' + name)
+}
+
 DB.prototype._process = function(s) {
   var s = s.replace(/_([^_]+)_/g, '<em>$1</em>')
   s = s.replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
   s = s.replace(/\[\[([^\[\]]+)\]\]/g, '<sup>$1</sup>')
+  var attribs = this.getCurrentAttributes()
+  s = s.replace(/<<([^<>]+)>>/g, function(match, name) {return substituter(attribs, name)})
   return s
 }
 
