@@ -77,9 +77,9 @@ JS.Test.describe('DB', function() { with(this) {
     it('fills in missing fields', function() { with(this) {
       attrs = {'sex': 'M'}
       attrs = this.db._normalizeAttributes(attrs)
-      assertEqual(null, attrs['gene'])
-      assertEqual('M', attrs['sex'])
-      assertEqual(null, attrs['mutation'])
+      assertEqual(null, attrs.gene)
+      assertEqual('M', attrs.sex)
+      assertEqual(null, attrs.mutation)
     }})
 
     it('throws with bad values', function() { with(this) {
@@ -97,33 +97,76 @@ JS.Test.describe('DB', function() { with(this) {
       var attrs = {'sex': 'F'}
       var str = 'The Cat in the Hat'
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str)
-      assertEqual(str, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
+      assertEqual(str, this.db.getChunk('mammals', 'FUR_TYPE', attrs).contents)
     }})
 
-    it('keeps track of attributes', function() { with(this) {
+    it('tracks different contents for different attributes', function() { with(this) {
       this.db.addReportType('mammals')
       this.db.addChunkName('mammals', 'FUR_TYPE')
-      var attrs = {'sex': 'F'}
+      var attrs = {'sex': 'F', 'gene': 'LION'}
 
       var str1 = 'The Cat in the Hat'
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str1)
 
-      attrs['sex'] = 'M'
+      attrs.sex = 'M'
       var str2 = 'Green Eggs and Ham'
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str2)
 
-      attrs['sex'] = null
+      attrs.sex = null
       var str3 = 'Hop on Pop'
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str3)
 
-      attrs['sex'] = 'M'
-      assertEqual(str2, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
-      attrs['sex'] = null
-      assertEqual(str3, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
-      attrs['sex'] = 'F'
-      assertEqual(str1, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
-      attrs['gene'] = 'TIGR'
-      assertEqual(null, this.db.getChunk('mammals', 'FUR_TYPE', attrs)['contents'])
+      attrs.sex = 'M'
+      var result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
+      assertEqual([false, str2], [result.inherited, result.contents])
+
+      attrs.sex = null
+      result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
+      assertEqual([false, str3], [result.inherited, result.contents])
+
+      attrs.sex = 'F'
+      result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
+      assertEqual([false, str1], [result.inherited, result.contents])
+
+      attrs.gene = 'TIGR'
+      result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
+      assertEqual([true, null], [result.inherited, result.contents])
+    }})
+
+    it('handles inheritance correctly', function() { with(this) {
+      var attrs = {'gene': null, 'mutation': null, 'sex': null}
+      this.db.addReportType('mammals')
+      this.db.addChunkName('mammals', 'ABOUT')
+      this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A mammal')
+
+      attrs.gene = 'LION'
+      this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A lion')
+      attrs.sex = 'F'
+      this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A female lion')
+
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([false, 'A female lion'], [result.inherited, result.contents])
+
+      attrs.sex = 'M'
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([true, 'A lion'], [result.inherited, result.contents])
+
+      attrs.sex = null
+      attrs.mutation = 'ALBINO'
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([true, 'A lion'], [result.inherited, result.contents])
+
+      attrs.mutation = null
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([false, 'A lion'], [result.inherited, result.contents])
+
+      attrs.gene = null
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([false, 'A mammal'], [result.inherited, result.contents])
+
+      attrs.gene = 'TIGR'
+      var result = this.db.getChunk('mammals', 'ABOUT', attrs)
+      assertEqual([true, 'A mammal'], [result.inherited, result.contents])
     }})
   }})
 
@@ -156,7 +199,7 @@ JS.Test.describe('DB', function() { with(this) {
   describe('getCitation', function() { with(this) {
     it('finds the citation', function() { with(this) {
       var citation = this.db.getCitation('Thompson01')
-      assertEqual('Am J Hum Genet', citation['fields']['journal'])
+      assertEqual('Am J Hum Genet', citation.fields.journal)
     }})
   }})
 }})

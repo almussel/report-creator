@@ -108,11 +108,12 @@ var citations = [
 function DB() {
   this._reportTypes = []  // [ <reportType>, ... ]
   this._chunkNames = {}  // { reportType: [<chunkName>, ...], ... }
-  this._chunkContents = {}  // {'key': <key-string>, 'value': <value>, ... }
+  this._chunkContents = {}  // {'chunkName': [ {"attributes": <attrs>, "specificity": <int>,  "content": <string> }, ... ], ...} sorted 
+
   this._citations = {}
   for (var i = 0; i < citations.length; i++) {
     var citation = citations[i]
-    this._citations[citation['fixed_key']] = citation
+    this._citations[citation.fixed_key] = citation
   }
 }
 
@@ -131,7 +132,9 @@ DB.prototype.getAllAttributeNames = function () {
 DB.prototype._validateAttributeName = function(attributeName) {
   var names = this.getAllAttributeNames()
   for (var i = 0; i < names.length; i++ ) {
-    if (attributeName == names[i]) { return }
+    if (attributeName == names[i]) {
+      return
+    }
   }
   throw new Error('There is no attribute named ' + attributeName)
 }
@@ -144,7 +147,9 @@ DB.prototype.getAllAttributeValues = function(attributeName) {
 DB.prototype._validateAttributeValue = function(attributeName, attributeValue) {
   var values = this.getAllAttributeValues(attributeName)
   for (var i = 0; i < values.length; i++) {
-    if (attributeValue == values[i]) { return }
+    if (attributeValue == values[i]) {
+      return
+    }
   }
   throw new Error(attributeValue + ' is not a valid value for attribute ' + attributeName)
 }
@@ -179,7 +184,9 @@ DB.prototype.getAllReportTypes = function() {
 
 DB.prototype._validateReportType = function(reportType) {
   for (var i = 0; i < this._reportTypes.length; i++) {
-    if (reportType == this._reportTypes[i]) { return }
+    if (reportType == this._reportTypes[i]) {
+      return
+    }
   }
   throw new Error('There is no report type named ' + reportType)
 }
@@ -195,6 +202,7 @@ DB.prototype.addChunkName = function(reportType, chunkName) {
     }
   }
   chunkNames.push(chunkName)
+  this._chunkContents[chunkName] = []
 }
 
 DB.prototype.getAllChunkNames = function(reportType) {
@@ -213,23 +221,79 @@ DB.prototype._validateChunkName = function(reportType, chunkName) {
   throw new Error(reportType + ' has no chunk named ' + chunkName)
 }
 
-DB.prototype._makeKey = function (reportType, chunkName, attrs) {
-  var result = this._normalizeAttributes(attrs)
-  result['reportType'] = reportType
-  result['chunkName'] = chunkName
-  return JSON.stringify(result)
+DB.prototype._specificity = function(attrs) {
+  var result = 0
+  var names = this.getAllAttributeNames()
+  names.push('reportType')
+  for (var i = 0; i < names.length; i++) {
+    var attributeName = names[i]
+    if (attrs[attributeName]) {
+      result += 1
+    }
+  }
+  return result
+}
+
+DB.prototype._isExactMatch = function(currentAttrs, definedAttrs) {
+  var names = this.getAllAttributeNames()
+  names.push('reportType')
+  for (var i = 0; i < names.length; i++) {
+    var attributeName = names[i]
+    if (currentAttrs[attributeName] != definedAttrs[attributeName]) {
+      return false
+    }
+  }
+  return true
+}
+
+DB.prototype._isMatch = function(currentAttrs, definedAttrs) {
+  var names = this.getAllAttributeNames()
+  names.push('reportType')
+  for (var i = 0; i < names.length; i++) {
+    var currentValue = currentAttrs[names[i]]
+    var definedValue = definedAttrs[names[i]]
+    if (definedValue && currentValue != definedValue) {
+      return false
+    }
+  }
+  return true
 }
 
 DB.prototype.setChunkContents = function(reportType, chunkName, attrs, contents) {
+  attrs = this._normalizeAttributes(attrs)
+  attrs.reportType = reportType
   this._validateChunkName(reportType, chunkName)
-  var key = this._makeKey(reportType, chunkName, attrs)
-  this._chunkContents[key] = contents
+  var target = null
+  var instances = this._chunkContents[chunkName]
+  for (var i = 0; i < instances.length; i++) {
+    var instance = instances[i]
+    if (this._isExactMatch(attrs, instance.attributes)) {
+      target = instance
+      break
+    }
+  }
+  if (! target) {
+    target = {"attributes": attrs, "specificity": this._specificity(attrs)}
+    instances.push(target)
+    instances.sort(function(a, b) {return b.specificity - a.specificity})
+  }
+  target.contents = contents
 }
 
 DB.prototype.getChunk = function(reportType, chunkName, attrs) {
+  attrs = this._normalizeAttributes(attrs)
+  attrs.reportType = reportType
   this._validateChunkName(reportType, chunkName)
-  var key = this._makeKey(reportType, chunkName, attrs)
-  return { "inherited": false, "contents": this._chunkContents[key] || null }
+  var instances = this._chunkContents[chunkName]
+  for (var i = 0; i < instances.length; i++) {
+    var instance = instances[i]
+    if (this._isMatch(attrs, instance.attributes)) {
+      var inherited = ! this._isExactMatch(attrs, instance.attributes)
+      var contents = instance.contents
+      return { "inherited": inherited, "contents": contents }
+    }
+  }
+  return { "inherited": true, "contents": null }
 }
 
 // REPORTS
@@ -239,7 +303,7 @@ DB.prototype.getReportContents = function(reportType, attrs) {
   var names = this.getAllChunkNames(reportType)
   for (var i = 0; i < names.length; i++) {
     var chunkName = names[i]
-    var contents = this.getChunk(reportType, chunkName, attrs)['contents']
+    var contents = this.getChunk(reportType, chunkName, attrs).contents
     if (contents) {
       results.push('<p>')
       results.push(contents)
@@ -261,7 +325,7 @@ function substituter(attribs, name) {
     'he/she': {'M': 'he', 'F': 'she'}
   }
   if (name in sex_dependents) {
-    return sex_dependents[name][attribs['sex']]
+    return sex_dependents[name][attribs.sex]
   }
   throw new Error('unknown attribute ' + name)
 }
