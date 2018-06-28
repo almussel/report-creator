@@ -306,11 +306,11 @@ DB.prototype.getReportContents = function(reportType, attrs) {
     var contents = this.getChunk(reportType, chunkName, attrs).contents
     if (contents) {
       results.push('<p>')
-      results.push(contents)
+      results.push(contents.replace(/\n{2,}/, '</p><p>'))
       results.push('</p>\n\n')
     }
   }
-  return this._process(results.join(''), attrs).trim()
+  return this._markDown(results.join(''), attrs)
 }
 
 function substituter(attribs, name) {
@@ -330,11 +330,12 @@ function substituter(attribs, name) {
   throw new Error('unknown attribute ' + name)
 }
 
-DB.prototype._process = function(s, attribs) {
+DB.prototype._markDown = function(s, attribs) {
   var s = s.replace(/_([^_]+)_/g, '<em>$1</em>')
   s = s.replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
   s = s.replace(/\[\[([^\[\]]+)\]\]/g, '<sup>$1</sup>')
   s = s.replace(/<<([^<>]+)>>/g, function(match, name) {return substituter(attribs, name)})
+  s = s.trim()
   return s
 }
 

@@ -177,21 +177,21 @@ JS.Test.describe('DB', function() { with(this) {
       this.db.addChunkName('mammals', 'FUR_TYPE')
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, 'Soft and _fuzzy_, with *a double coat*.')
       this.db.addChunkName('mammals', 'EYE_COLOR')
-      this.db.setChunkContents('mammals', 'EYE_COLOR', attrs, 'Green with slit pupil[[Miller94]] and reflective retina.')
+      this.db.setChunkContents('mammals', 'EYE_COLOR', attrs, 'Green with slit pupil.[[Miller94]]\n\nA reflective retina increases the sensitivity in dark environments.')
       str = this.db.getReportContents('mammals', attrs)
       assertEqual(
-        '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil<sup>Miller94</sup> and reflective retina.</p>', str)
+        '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil.<sup>Miller94</sup></p><p>A reflective retina increases the sensitivity in dark environments.</p>', str)
     }})
 
     it('substitutes attribute values', function() { with(this) {
       attrs = {'gene': 'BEAR', 'sex': 'M'}
-      var str = this.db._process('A <<man/woman>> with a mutation in the _<<gene>>_ gene.', attrs)
+      var str = this.db._markDown('A <<man/woman>> with a mutation in the _<<gene>>_ gene.', attrs)
       assertEqual('A man with a mutation in the <em>BEAR</em> gene.', str)
     }})
 
     it('throws for unknown substitution values', function() { with(this) {
       assertThrows(Error, function() {
-        this.db._process('A <<gremlin>> shrieked', {})
+        this.db._markDown('A <<gremlin>> shrieked', {})
       })
     }})
   }})
