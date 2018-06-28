@@ -48,7 +48,7 @@ class AttributeSelector extends Component {
   }
   
   clearAttributes() {
-      var newState = {}
+    var newState = {}
     for (var attribute in this.state) {
       newState[attribute] = null
     }
@@ -62,7 +62,7 @@ class AttributeSelector extends Component {
         {Object.keys(this.state).map((attribute) =>
           <div key={attribute}>
             <label> {attribute} </label>
-            <select value={this.state[attribute]} onChange={(e) => this.handleChange(e, attribute)}>
+            <select onChange={(e) => this.handleChange(e, attribute)}>
               {db.getAllAttributeValues(attribute).map((value) =>
                 <option key={value} value={value}> {value} </option>
               )}
@@ -71,7 +71,7 @@ class AttributeSelector extends Component {
         )}
         <button onClick={this.clearAttributes}> Clear </button>
         <ReportViewer reportType={this.props.reportType} attributes={this.state} />
-        <ChunkEditor reportType={this.props.reportType} attributes={this.state}/>
+        <ChunkEditor reportType={this.props.reportType} attributes={this.state} />
       </div>
     )
   }
