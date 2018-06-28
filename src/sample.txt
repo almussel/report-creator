@@ -1,0 +1,43 @@
+GENERAL:
+
+A pathogenic mutation was found in your _<<gene>>_ gene.
+This means that your chances of being eaten alive are
+greater than for the average US <<man/woman>>.
+
+This result does not mean that an animal is stalking you now,
+or that you will be eaten in the future.  Discuss these results
+with your local wildlife warden to determine the best
+ways to miminize your risk.[[Thompson01]]
+
+Monitoring of native and exotic carnivores is ongoing, and if
+any studies show increasing numbers of them in your area we
+will try to contact you.
+
+SPECIFIC TO TIGER:
+
+A pathogenic mutation was found in your _TIGR_ gene.
+This means that your chances of being eaten alive are
+greater than for the average US <<man/woman>>, but
+these risks are computed based on studies of other
+carnivores.  Your risk may be lower because the nearest
+natural tiger habitat is over 7000 miles from the US.[[Thompson01,Tripathi16]]
+
+ABOUT:
+
+Bears are native to North America, although they are
+rarely found in urban areas.  They usually avoid people,
+but if provoked may attack.  A variety of bear known
+as the Brown Bear (_ursus arctos_) is particularly dangerous,
+because they are big, strong, and just plain ornery.
+
+Tigers are native to Asia, and while they are able to swim,
+the Atlantic and Pacific oceans are too wide for them to
+cross.  Rare fatal attacks in North America have been reported,
+but primarily from captive animals with deficient obedience
+training.[[Gumaste15]]
+
+Lions live primarily in Africa, and do not thrive in the
+climate of the northern US and Canada.  Their paws are
+poorly suited for snow, and they have trouble finding food
+because they are not allowed in most supermarkets.
+
