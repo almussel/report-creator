@@ -5,9 +5,9 @@ import './App.css';
 var db = new DB()
 var rtype = 'Default Report'
 db.addReportType(rtype)
-db.addChunkName(rtype, 'Introduction P1')
-db.addChunkName(rtype, 'Introduction P2')
-db.addChunkName(rtype, 'Introduction P3')
+db.addChunkName(rtype, 'ABOUT_GENE.TITLE')
+db.addChunkName(rtype, 'ABOUT_GENE.CONTENT')
+db.addChunkName(rtype, 'ABOUT_GENE.CONTENT_MORE')
 
 class App extends Component {
   constructor(props) {
