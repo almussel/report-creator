@@ -103,7 +103,7 @@ JS.Test.describe('DB', function() { with(this) {
     it('tracks different contents for different attributes', function() { with(this) {
       this.db.addReportType('mammals')
       this.db.addChunkName('mammals', 'FUR_TYPE')
-      var attrs = {'sex': 'F', 'gene': 'LION'}
+      var attrs = {'sex': 'F', 'gene': 'APC'}
 
       var str1 = 'The Cat in the Hat'
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, str1)
@@ -128,7 +128,7 @@ JS.Test.describe('DB', function() { with(this) {
       result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
       assertEqual([false, str1], [result.inherited, result.contents])
 
-      attrs.gene = 'TIGR'
+      attrs.gene = 'BAP1'
       result = this.db.getChunk('mammals', 'FUR_TYPE', attrs)
       assertEqual([true, null], [result.inherited, result.contents])
     }})
@@ -139,7 +139,7 @@ JS.Test.describe('DB', function() { with(this) {
       this.db.addChunkName('mammals', 'ABOUT')
       this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A mammal')
 
-      attrs.gene = 'LION'
+      attrs.gene = 'APC'
       this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A lion')
       attrs.sex = 'F'
       this.db.setChunkContents('mammals', 'ABOUT', attrs, 'A female lion')
@@ -152,7 +152,7 @@ JS.Test.describe('DB', function() { with(this) {
       assertEqual([true, 'A lion'], [result.inherited, result.contents])
 
       attrs.sex = null
-      attrs.mutation = 'ALBINO'
+      attrs.mutation = 'I1307K'
       var result = this.db.getChunk('mammals', 'ABOUT', attrs)
       assertEqual([true, 'A lion'], [result.inherited, result.contents])
 
@@ -164,7 +164,7 @@ JS.Test.describe('DB', function() { with(this) {
       var result = this.db.getChunk('mammals', 'ABOUT', attrs)
       assertEqual([false, 'A mammal'], [result.inherited, result.contents])
 
-      attrs.gene = 'TIGR'
+      attrs.gene = 'BAP1'
       var result = this.db.getChunk('mammals', 'ABOUT', attrs)
       assertEqual([true, 'A mammal'], [result.inherited, result.contents])
     }})
@@ -184,9 +184,9 @@ JS.Test.describe('DB', function() { with(this) {
     }})
 
     it('substitutes attribute values', function() { with(this) {
-      attrs = {'gene': 'BEAR', 'sex': 'M'}
+      attrs = {'gene': 'ATM', 'sex': 'M'}
       var str = this.db._markDown('A <<man/woman>> with a mutation in the _<<gene>>_ gene.', attrs)
-      assertEqual('A man with a mutation in the <em>BEAR</em> gene.', str)
+      assertEqual('A man with a mutation in the <em>ATM</em> gene.', str)
     }})
 
     it('throws for unknown substitution values', function() { with(this) {

@@ -120,8 +120,8 @@ function DB() {
 // ATTRIBUTES
 
 var attributeValues = {
-  'gene': [null, 'LION', 'TIGR', 'BEAR'],
-  'mutation': [null, 'DWARF', 'ALBINO'],
+  'gene': [null, 'APC', 'ATM', 'BAP1', 'BRCA1', 'CHEK2', 'EPCAM'],
+  'mutation': [null, 'none', 'I1307K', 'R1699Q', 'I157T'],
   'sex': [null, 'M', 'F']
 }
 
