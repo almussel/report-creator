@@ -3,15 +3,17 @@ import React, { Component } from 'react';
 import './App.css';
 
 var db = new DB()
-db.addReportType('Default Report')
-//db.addChunkName('Default Report', 'General')
-//db.addChunkName('Default Report', 'Gene Specific')
+var rtype = 'Default Report'
+db.addReportType(rtype)
+db.addChunkName(rtype, 'Introduction P1')
+db.addChunkName(rtype, 'Introduction P2')
+db.addChunkName(rtype, 'Introduction P3')
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      reportType: 'Default Report',
+      reportType: rtype,
     }
   }
 
@@ -66,9 +68,9 @@ class AttributeSelector extends Component {
           <h2> Attributes </h2>
           {Object.keys(this.state).map((attribute) =>
             <div key={attribute}>
-              <label> {attribute} </label>
-              <select value={this.state[attribute] || ''} onChange={(e) => this.handleChange(e, attribute)}>
-                {db.getAllAttributeValues(attribute).map((value) =>
+              <select className="App-attribute" style={{width: '100px'}} value={this.state[attribute] || ''} onChange={(e) => this.handleChange(e, attribute)}>
+                <option disabled key={""} value={""}> {attribute} </option>
+                {db.getAllAttributeValues(attribute).filter((value) => value).map((value) =>
                   <option key={value} value={value}> {value} </option>
                 )}
               </select>
