@@ -310,7 +310,33 @@ DB.prototype.getReportContents = function(reportType, attrs) {
       results.push('</p>\n\n')
     }
   }
-  return this._markDown(results.join(''), attrs)
+  var s = results.join('')
+  s = this._mapCitations(s)
+  return this._markDown(s, attrs)
+}
+
+DB.prototype._mapCitations = function(s) {
+  var citeMap = {}
+  s = s.replace(/\[\[([^\[\]]+)\]\]/g, function(match, keys) {
+    var results = []
+    var keys = keys.split(',')
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i].trim()
+      if (! (key in citeMap)) {
+        citeMap[key] = 1 + Object.keys(citeMap).length
+      }
+      results.push(citeMap[key])
+    }
+    return '[[' + results.sort().join(',') + ']]'
+  })
+  var keys = Object.keys(citeMap)
+  var bottoms = [s]
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i]
+    var formatted = this._formatCitation(this.getCitation(key))
+    bottoms.push(`<p>${citeMap[key]}. ${formatted}</p>`)
+  }
+  return bottoms.join('')
 }
 
 function substituter(attribs, name) {
@@ -344,6 +370,12 @@ DB.prototype.getCitation = function(fixedKey) {
     throw new Error('there is no citation named ' + fixedKey)
   }
   return this._citations[fixedKey]
+}
+
+DB.prototype._formatCitation = function(citation) {
+  var fields = citation.fields
+  var s = `${fields.authors}. ${fields.title}. _${fields.journal}_. ${fields.date}.`
+  return s
 }
 
 module.exports = {DB: DB}

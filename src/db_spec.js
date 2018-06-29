@@ -177,10 +177,10 @@ JS.Test.describe('DB', function() { with(this) {
       this.db.addChunkName('mammals', 'FUR_TYPE')
       this.db.setChunkContents('mammals', 'FUR_TYPE', attrs, 'Soft and _fuzzy_, with *a double coat*.')
       this.db.addChunkName('mammals', 'EYE_COLOR')
-      this.db.setChunkContents('mammals', 'EYE_COLOR', attrs, 'Green with slit pupil.[[Miller94]]\n\nA reflective retina increases the sensitivity in dark environments.')
+      this.db.setChunkContents('mammals', 'EYE_COLOR', attrs, 'Green with slit pupil.[[Gumaste15]]\n\nA reflective retina increases the sensitivity in dark environments.')
       str = this.db.getReportContents('mammals', attrs)
       assertEqual(
-        '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil.<sup>Miller94</sup></p><p>A reflective retina increases the sensitivity in dark environments.</p>', str)
+        '<p>Soft and <em>fuzzy</em>, with <strong>a double coat</strong>.</p>\n\n<p>Green with slit pupil.<sup>1</sup></p><p>A reflective retina increases the sensitivity in dark environments.</p>\n\n<p>1. Gumaste PV, Penn LA, Cymerman RM, Kirchhoff T, Polsky D, Mclellan B. Skin cancer risk in BRCA1/2 mutation carriers. <em>Br J Dermatol</em>. 2015.</p>', str)
     }})
 
     it('substitutes attribute values', function() { with(this) {
@@ -200,6 +200,23 @@ JS.Test.describe('DB', function() { with(this) {
     it('finds the citation', function() { with(this) {
       var citation = this.db.getCitation('Thompson01')
       assertEqual('Am J Hum Genet', citation.fields.journal)
+    }})
+  }})
+
+  describe('_formatCitation', function() { with(this) {
+    it('formats the citation', function() { with(this) {
+      var actual = this.db._formatCitation(this.db.getCitation('Thompson01'))
+      var expected = 'Thompson D, Easton D. Variation in cancer risks, by mutation position, in BRCA2 mutation carriers. _Am J Hum Genet_. 2001.'
+      assertEqual(expected, actual)
+    }})
+  }})
+
+  describe('mapCitations', function() { with(this) {
+    it('reformats all the citations', function() { with(this) {
+      var s = 'Apples[[NCCN2018bc]], bananas, cherries[[Gumaste15,Thompson01, NCCN2018bc]], donuts, eclairs[[Tripathi16]], french fries[[Tripathi16]], and grapes[[Tripathi16]].'
+      var actual = this.db._mapCitations(s)
+      var expected = 'Apples[[1]], bananas, cherries[[1,2,3]], donuts, eclairs[[4]], french fries[[4]], and grapes[[4]].<p>1. National Comprehensive Cancer Network. Breast Cancer Screening and Diagnosis. _NCCN Guidelines Version 2.2018_. Published May 2018.</p><p>2. Gumaste PV, Penn LA, Cymerman RM, Kirchhoff T, Polsky D, Mclellan B. Skin cancer risk in BRCA1/2 mutation carriers. _Br J Dermatol_. 2015.</p><p>3. Thompson D, Easton D. Variation in cancer risks, by mutation position, in BRCA2 mutation carriers. _Am J Hum Genet_. 2001.</p><p>4. Tripathi R, Chen Z, Li L, Bordeaux JS. Incidence and survival of sebaceous carcinoma in the United States. _J Am Acad Dermatol_. 2016.</p>'
+      assertEqual(expected, actual)
     }})
   }})
 }})
