@@ -121,6 +121,7 @@ function DB() {
 
 var attributeValues = {
   'gene': [null, 'APC', 'ATM', 'BAP1', 'BRCA1', 'CHEK2', 'EPCAM'],
+  'classification': [null, 'pathogenic', 'likely pathogenic'],
   'mutation': [null, 'none', 'I1307K', 'R1699Q', 'I157T'],
   'sex': [null, 'M', 'F']
 }

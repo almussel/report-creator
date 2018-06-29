@@ -1,43 +1,71 @@
-GENERAL:
+ABOUT_GENE.TITLE
 
-A pathogenic mutation was found in your _<<gene>>_ gene.
-This means that your chances of being eaten alive are
-greater than for the average US <<man/woman>>.
+About _<<gene>>_ mutations:
 
-This result does not mean that an animal is stalking you now,
-or that you will be eaten in the future.  Discuss these results
-with your local wildlife warden to determine the best
-ways to miminize your risk.[[Thompson01]]
+ABOUT_GENE.CONTENT -- APC
 
-Monitoring of native and exotic carnivores is ongoing, and if
-any studies show increasing numbers of them in your area we
-will try to contact you.
+Testing positive for a <<classification>> variant (also called a mutation) in
+the _APC_ gene means your risk of developing colorectal cancer is greater than
+that of the average US <<man/woman>>. Your risks of developing brain, pancreatic,
+stomach, and small bowel cancers are also increased by this mutation.
 
-SPECIFIC TO TIGER:
+ABOUT_GENE.CONTENT -- APC  I1307K
 
-A pathogenic mutation was found in your _TIGR_ gene.
-This means that your chances of being eaten alive are
-greater than for the average US <<man/woman>>, but
-these risks are computed based on studies of other
-carnivores.  Your risk may be lower because the nearest
-natural tiger habitat is over 7000 miles from the US.[[Thompson01,Tripathi16]]
+Testing positive for a <<classification>> mutation in the _APC_ gene means
+your risk of developing colorectal cancer is greater than that of the
+average US <<man/woman>>. Specifically, the mutation that was identified is called
+I1307K, a common mutation in certain populations that only slightly
+increases cancer risk.
 
-ABOUT:
+ABOUT_GENE.CONTENT_MORE -- APC
 
-Bears are native to North America, although they are
-rarely found in urban areas.  They usually avoid people,
-but if provoked may attack.  A variety of bear known
-as the Brown Bear (_ursus arctos_) is particularly dangerous,
-because they are big, strong, and just plain ornery.
+Mutations in the _APC_ gene can cause one of two conditions: familial
+adenomatous polyposis (FAP) or attenuated familial adenomatous polyposis
+(AFAP). Both of these are hereditary conditions that are associated with
+polyposis (a large number of polyps in the gastrointestinal tract) as well
+as an increased risk of colorectal and other cancers. Because the cancer
+risks and screening guidelines differ between FAP and AFAP, please speak to
+your healthcare provider to determine which apply to you.
 
-Tigers are native to Asia, and while they are able to swim,
-the Atlantic and Pacific oceans are too wide for them to
-cross.  Rare fatal attacks in North America have been reported,
-but primarily from captive animals with deficient obedience
-training.[[Gumaste15]]
+ABOUT_GENE.CONTENT_MORE -- APC  I1307K
 
-Lions live primarily in Africa, and do not thrive in the
-climate of the northern US and Canada.  Their paws are
-poorly suited for snow, and they have trouble finding food
-because they are not allowed in most supermarkets.
+There have been many studies that show the _APC_ I1307K mutation is linked
+to slightly increased colorectal cancer risk. Unlike some other _APC_
+mutations, it is not associated with Familial Adenomatous Polyposis (FAP) or
+Attenuated Familial Adenomatous Polyposis (AFAP). Research on this gene and
+specific mutation is ongoing. The current colorectal cancer risk estimate
+for _APC_ I1307K is based on studies of a specific population. As additional
+information is gathered across more populations, risk estimates and
+associated cancers may change. If this happens, we will try to contact you.
+
+ABOUT_GENE.STUDIES
+
+There have been many studies that show that mutations in the _<<gene>>_ gene
+are linked to increased cancer risk. Research on this gene is ongoing.
+As additional information is gathered, risk estimates and associated
+cancers may change. If this happens, we will try to contact you.
+
+ABOUT_GENE.STUDIES -- APC I3017K
+
+<blank>
+
+ABOUT_GENE.CONTENT -- ATM F
+
+Testing positive for a <<classification>> variant (also called a mutation) in
+the _ATM_ gene means your risk of developing breast cancer is greater than
+that of the average US woman. Your risk of pancreatic cancer is also
+increased by this mutation.
+
+ABOUT_GENE.CONTENT -- ATM M
+
+Testing positive for a <<classification>> variant (also called a mutation) in
+the _ATM_ gene means your risks of developing pancreatic and prostate cancers
+are greater than that of the average US man.
+
+ABOUT_GENE.CONTENT -- BAP1
+
+Testing positive for a <<classification>> variant (also called a mutation) in
+the _BAP1_ gene means your risk of developing melanoma of the eye and skin is
+greater than that of the average US <<man/woman>>. Your risks of kidney and lung
+(specifically a type called mesothelioma) cancer are also increased by this mutation.
 
